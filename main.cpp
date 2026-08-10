@@ -2,13 +2,13 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include <algorithm>
 #include <random>
-#include <chrono>
+#include <algorithm>
 #include <cctype>
-#include <iomanip>
+#include <chrono>
 
 using namespace std;
+
 
 // ============================================================
 // PLAYER CLASS
@@ -20,17 +20,11 @@ private:
     int score;
 
 public:
-    Player() {
-        name = "Player";
+    Player(string playerName = "Player") {
+        name = playerName;
         score = 0;
     }
 
-    Player(string name) {
-        this->name = name;
-        score = 0;
-    }
-
-    // Getters
     string getName() const {
         return name;
     }
@@ -39,12 +33,10 @@ public:
         return score;
     }
 
-    // Add score
     void addScore(int points) {
         score += points;
     }
 
-    // Reset score
     void resetScore() {
         score = 0;
     }
@@ -57,139 +49,124 @@ public:
 
 class WordManager {
 private:
-    vector<string> sports;
-    vector<string> cities;
-    vector<string> countries;
-    vector<string> personalities;
+
+    // Sports
+    vector<string> sportsEasy = {
+        "golf", "tennis", "soccer"
+    };
+
+    vector<string> sportsMedium = {
+        "cricket", "baseball", "hockey"
+    };
+
+    vector<string> sportsHard = {
+        "badminton", "volleyball", "wrestling"
+    };
+
+
+    // Cities
+    vector<string> citiesEasy = {
+        "paris", "delhi", "tokyo"
+    };
+
+    vector<string> citiesMedium = {
+        "london", "sydney", "berlin"
+    };
+
+    vector<string> citiesHard = {
+        "kathmandu", "singapore", "johannesburg"
+    };
+
+
+    // Countries
+    vector<string> countriesEasy = {
+        "india", "nepal", "japan"
+    };
+
+    vector<string> countriesMedium = {
+        "canada", "brazil", "france"
+    };
+
+    vector<string> countriesHard = {
+        "australia", "switzerland", "netherlands"
+    };
+
 
 public:
 
-    WordManager() {
+    string getRandomWord(int category, int difficulty) const {
 
-        // Sports
-        sports = {
-            "football",
-            "basketball",
-            "cricket",
-            "tennis",
-            "volleyball",
-            "badminton",
-            "baseball",
-            "swimming",
-            "boxing",
-            "wrestling"
-        };
+        const vector<string>* words = nullptr;
 
-        // Cities
-        cities = {
-            "kathmandu",
-            "london",
-            "paris",
-            "tokyo",
-            "sydney",
-            "delhi",
-            "seoul",
-            "dubai",
-            "berlin",
-            "singapore"
-        };
+        if (category == 1) {
 
-        // Countries
-        countries = {
-            "nepal",
-            "india",
-            "japan",
-            "canada",
-            "brazil",
-            "australia",
-            "germany",
-            "france",
-            "italy",
-            "mexico"
-        };
+            if (difficulty == 1)
+                words = &sportsEasy;
+            else if (difficulty == 2)
+                words = &sportsMedium;
+            else
+                words = &sportsHard;
 
-        // Personalities
-        personalities = {
-            "einstein",
-            "shakespeare",
-            "napoleon",
-            "gandhi",
-            "lincoln",
-            "newton",
-            "mozart",
-            "plato",
-            "aristotle",
-            "socrates"
-        };
-    }
+        }
+        else if (category == 2) {
 
+            if (difficulty == 1)
+                words = &citiesEasy;
+            else if (difficulty == 2)
+                words = &citiesMedium;
+            else
+                words = &citiesHard;
 
-    // --------------------------------------------------------
-    // GET RANDOM WORD
-    // --------------------------------------------------------
+        }
+        else if (category == 3) {
 
-    string getRandomWord(int category) const {
-
-        const vector<string>* selectedCategory;
-
-        switch (category) {
-
-            case 1:
-                selectedCategory = &sports;
-                break;
-
-            case 2:
-                selectedCategory = &cities;
-                break;
-
-            case 3:
-                selectedCategory = &countries;
-                break;
-
-            case 4:
-                selectedCategory = &personalities;
-                break;
-
-            default:
-                selectedCategory = &sports;
+            if (difficulty == 1)
+                words = &countriesEasy;
+            else if (difficulty == 2)
+                words = &countriesMedium;
+            else
+                words = &countriesHard;
         }
 
-        // Random number generator
         random_device rd;
-        mt19937 generator(rd());
+        mt19937 gen(rd());
 
-        uniform_int_distribution<int> distribution(
+        uniform_int_distribution<int> dist(
             0,
-            static_cast<int>(selectedCategory->size()) - 1
+            static_cast<int>(words->size()) - 1
         );
 
-        return (*selectedCategory)[distribution(generator)];
+        return (*words)[dist(gen)];
     }
 
 
-    // --------------------------------------------------------
-    // GET CATEGORY NAME
-    // --------------------------------------------------------
+    string categoryName(int category) const {
 
-    string getCategoryName(int category) const {
+        if (category == 1)
+            return "Sports";
 
-        switch (category) {
+        if (category == 2)
+            return "Cities";
 
-            case 1:
-                return "Sports";
+        if (category == 3)
+            return "Countries";
 
-            case 2:
-                return "Cities";
+        return "Unknown";
+    }
 
-            case 3:
-                return "Countries";
 
-            case 4:
-                return "Personalities";
+    string difficultyName(int difficulty) const {
 
-            default:
-                return "Unknown";
-        }
+        if (difficulty == 1)
+            return "Easy";
+
+        if (difficulty == 2)
+            return "Medium";
+
+        if (difficulty == 3)
+            return "Hard";
+
+        return "Unknown";
     }
 };
 
@@ -200,126 +177,117 @@ public:
 
 class ScoreManager {
 private:
-
-    struct HighScore {
-        string playerName;
-        int score;
-    };
-
-    vector<HighScore> highScores;
-
-    const string FILE_NAME = "highscores.txt";
+    const string fileName = "scores.txt";
 
 public:
 
-    // --------------------------------------------------------
-    // LOAD HIGH SCORES
-    // --------------------------------------------------------
+    void saveScore(const Player& player) const {
 
-    void loadScores() {
-
-        highScores.clear();
-
-        ifstream file(FILE_NAME);
+        ofstream file(fileName, ios::app);
 
         if (!file) {
+            cout << "\nERROR: Could not open scores.txt for saving.\n";
             return;
         }
 
-        string name;
-        int score;
+        // Store the complete name and score separated by |
+        file << player.getName()
+             << "|"
+             << player.getScore()
+             << "\n";
 
-        while (file >> name >> score) {
-            highScores.push_back({name, score});
+        file.close();
+
+        cout << "\nScore saved successfully!\n";
+    }
+
+
+    void displayHighScores() const {
+
+        ifstream file(fileName);
+
+        cout << "\n====================================\n";
+        cout << "           HIGH SCORES\n";
+        cout << "====================================\n";
+
+        if (!file) {
+            cout << "No high scores found yet.\n";
+            cout << "Play a game first to create a score.\n";
+            cout << "====================================\n";
+            return;
+        }
+
+        vector<pair<string, int>> scores;
+
+        string line;
+
+        while (getline(file, line)) {
+
+            if (line.empty())
+                continue;
+
+            size_t separator = line.find('|');
+
+            if (separator == string::npos)
+                continue;
+
+            string name =
+                line.substr(0, separator);
+
+            string scoreText =
+                line.substr(separator + 1);
+
+            try {
+
+                int score = stoi(scoreText);
+
+                scores.push_back({name, score});
+
+            }
+            catch (...) {
+                // Ignore invalid score lines
+            }
         }
 
         file.close();
 
-        sort(
-            highScores.begin(),
-            highScores.end(),
-            [](const HighScore& a, const HighScore& b) {
-                return a.score > b.score;
-            }
-        );
-    }
 
+        if (scores.empty()) {
 
-    // --------------------------------------------------------
-    // SAVE SCORE
-    // --------------------------------------------------------
+            cout << "No high scores found yet.\n";
+            cout << "====================================\n";
 
-    void saveScore(const Player& player) {
-
-        highScores.push_back({
-            player.getName(),
-            player.getScore()
-        });
-
-        sort(
-            highScores.begin(),
-            highScores.end(),
-            [](const HighScore& a, const HighScore& b) {
-                return a.score > b.score;
-            }
-        );
-
-        // Keep only top 10
-        if (highScores.size() > 10) {
-            highScores.resize(10);
-        }
-
-        ofstream file(FILE_NAME);
-
-        if (!file) {
-            cout << "Error: Could not save high scores.\n";
             return;
         }
 
-        for (const HighScore& entry : highScores) {
-            file << entry.playerName << " "
-                 << entry.score << "\n";
+
+        // Highest score first
+        sort(scores.begin(), scores.end(),
+             [](const pair<string, int>& a,
+                const pair<string, int>& b) {
+
+                 return a.second > b.second;
+             });
+
+
+        int position = 1;
+
+        for (const auto& entry : scores) {
+
+            cout << position
+                 << ". "
+                 << entry.first
+                 << " - "
+                 << entry.second
+                 << " points\n";
+
+            position++;
+
+            if (position > 10)
+                break;
         }
 
-        file.close();
-    }
-
-
-    // --------------------------------------------------------
-    // DISPLAY HIGH SCORES
-    // --------------------------------------------------------
-
-    void displayHighScores() {
-
-        loadScores();
-
-        cout << "\n";
-        cout << "============================================\n";
-        cout << "              HIGH SCORES\n";
-        cout << "============================================\n";
-
-        if (highScores.empty()) {
-            cout << "No high scores available yet.\n";
-            return;
-        }
-
-        cout << left
-             << setw(8) << "Rank"
-             << setw(20) << "Player"
-             << "Score\n";
-
-        cout << "--------------------------------------------\n";
-
-        for (size_t i = 0; i < highScores.size(); i++) {
-
-            cout << left
-                 << setw(8) << i + 1
-                 << setw(20) << highScores[i].playerName
-                 << highScores[i].score
-                 << "\n";
-        }
-
-        cout << "============================================\n";
+        cout << "====================================\n";
     }
 };
 
@@ -340,132 +308,132 @@ private:
 
     vector<char> guessedLetters;
 
+    int category;
+    int difficulty;
     int attempts;
     int maxAttempts;
-    int difficulty;
-
     int timeLimit;
+
 
 public:
 
     Game(string playerName)
         : player(playerName) {
 
-        attempts = 0;
-        maxAttempts = 6;
+        category = 1;
         difficulty = 1;
-        timeLimit = 60;
+        attempts = 0;
+        maxAttempts = 8;
+        timeLimit = 90;
     }
 
 
     // --------------------------------------------------------
-    // DISPLAY TITLE
+    // CATEGORY SELECTION
     // --------------------------------------------------------
 
-    void displayTitle() const {
+    void chooseCategory() {
 
-        cout << "\n";
-        cout << "============================================\n";
-        cout << "               HANGMAN GAME\n";
-        cout << "============================================\n";
-    }
+        do {
 
-
-    // --------------------------------------------------------
-    // SELECT CATEGORY
-    // --------------------------------------------------------
-
-    int selectCategory() const {
-
-        int choice;
-
-        cout << "\n";
-        cout << "========== SELECT CATEGORY ==========\n";
-        cout << "1. Sports\n";
-        cout << "2. Cities\n";
-        cout << "3. Countries\n";
-        cout << "4. Personalities\n";
-        cout << "======================================\n";
-
-        while (true) {
-
+            cout << "\nSelect a category:\n";
+            cout << "1. Sports\n";
+            cout << "2. Cities\n";
+            cout << "3. Countries\n";
             cout << "Enter your choice: ";
-            cin >> choice;
 
-            if (choice >= 1 && choice <= 4) {
-                return choice;
+            cin >> category;
+
+            if (cin.fail() || category < 1 || category > 3) {
+
+                cin.clear();
+                cin.ignore(1000, '\n');
+
+                cout << "Invalid choice. Please try again.\n";
             }
 
-            cout << "Invalid choice. Please select 1-4.\n";
-        }
+        } while (category < 1 || category > 3);
+
+        cout << "Selected category: "
+             << wordManager.categoryName(category)
+             << endl;
     }
 
 
     // --------------------------------------------------------
-    // SELECT DIFFICULTY
+    // DIFFICULTY SELECTION
     // --------------------------------------------------------
 
-    void selectDifficulty() {
+    void chooseDifficulty() {
 
-        int choice;
+        do {
 
-        cout << "\n";
-        cout << "========== SELECT DIFFICULTY ==========\n";
-        cout << "1. Easy\n";
-        cout << "2. Medium\n";
-        cout << "3. Hard\n";
-        cout << "=======================================\n";
-
-        while (true) {
-
+            cout << "\nSelect difficulty:\n";
+            cout << "1. Easy\n";
+            cout << "2. Medium\n";
+            cout << "3. Hard\n";
             cout << "Enter your choice: ";
-            cin >> choice;
 
-            if (choice >= 1 && choice <= 3) {
-                difficulty = choice;
-                break;
+            cin >> difficulty;
+
+            if (cin.fail() ||
+                difficulty < 1 ||
+                difficulty > 3) {
+
+                cin.clear();
+                cin.ignore(1000, '\n');
+
+                cout << "Invalid choice. Please try again.\n";
             }
 
-            cout << "Invalid choice. Please select 1-3.\n";
+        } while (difficulty < 1 || difficulty > 3);
+
+
+        if (difficulty == 1) {
+            maxAttempts = 8;
+            timeLimit = 90;
+        }
+        else if (difficulty == 2) {
+            maxAttempts = 6;
+            timeLimit = 60;
+        }
+        else {
+            maxAttempts = 4;
+            timeLimit = 45;
         }
 
-        // Configure difficulty
-        switch (difficulty) {
+        cout << "Selected difficulty: "
+             << wordManager.difficultyName(difficulty)
+             << endl;
 
-            case 1:
-                maxAttempts = 8;
-                timeLimit = 90;
-                break;
+        cout << "Maximum attempts: "
+             << maxAttempts << endl;
 
-            case 2:
-                maxAttempts = 6;
-                timeLimit = 60;
-                break;
-
-            case 3:
-                maxAttempts = 4;
-                timeLimit = 45;
-                break;
-        }
+        cout << "Time limit: "
+             << timeLimit
+             << " seconds\n";
     }
 
 
     // --------------------------------------------------------
-    // INITIALIZE GAME
+    // SETUP ROUND
     // --------------------------------------------------------
 
-    void initializeGame(int category) {
+    void setupRound() {
 
-        secretWord = wordManager.getRandomWord(category);
+        secretWord =
+            wordManager.getRandomWord(
+                category,
+                difficulty
+            );
 
-        guessedWord = string(
-            secretWord.length(),
-            '_'
-        );
+        guessedWord =
+            string(secretWord.length(), '_');
 
         guessedLetters.clear();
-
         attempts = 0;
+
+        player.resetScore();
     }
 
 
@@ -475,130 +443,58 @@ public:
 
     void displayHangman() const {
 
-        cout << "\n";
+        cout << "\n  +---+\n";
 
-        switch (attempts) {
+        if (attempts >= 1)
+            cout << "  |   O\n";
+        else
+            cout << "  |\n";
 
-            case 0:
+        if (attempts >= 2)
+            cout << "  |   |\n";
+        else
+            cout << "  |\n";
 
-                cout << "  +---+\n";
-                cout << "  |   |\n";
-                cout << "      |\n";
-                cout << "      |\n";
-                cout << "      |\n";
-                cout << "=========\n";
+        if (attempts >= 4)
+            cout << "  |  /|\\\n";
+        else if (attempts >= 3)
+            cout << "  |  /|\n";
+        else
+            cout << "  |\n";
 
-                break;
+        if (attempts >= 6)
+            cout << "  |  / \\\n";
+        else if (attempts >= 5)
+            cout << "  |  /\n";
+        else
+            cout << "  |\n";
 
-            case 1:
-
-                cout << "  +---+\n";
-                cout << "  |   |\n";
-                cout << "  O   |\n";
-                cout << "      |\n";
-                cout << "      |\n";
-                cout << "=========\n";
-
-                break;
-
-            case 2:
-
-                cout << "  +---+\n";
-                cout << "  |   |\n";
-                cout << "  O   |\n";
-                cout << "  |   |\n";
-                cout << "      |\n";
-                cout << "=========\n";
-
-                break;
-
-            case 3:
-
-                cout << "  +---+\n";
-                cout << "  |   |\n";
-                cout << "  O   |\n";
-                cout << " /|   |\n";
-                cout << "      |\n";
-                cout << "=========\n";
-
-                break;
-
-            case 4:
-
-                cout << "  +---+\n";
-                cout << "  |   |\n";
-                cout << "  O   |\n";
-                cout << " /|\\  |\n";
-                cout << "      |\n";
-                cout << "=========\n";
-
-                break;
-
-            case 5:
-
-                cout << "  +---+\n";
-                cout << "  |   |\n";
-                cout << "  O   |\n";
-                cout << " /|\\  |\n";
-                cout << " /    |\n";
-                cout << "=========\n";
-
-                break;
-
-            default:
-
-                cout << "  +---+\n";
-                cout << "  |   |\n";
-                cout << "  O   |\n";
-                cout << " /|\\  |\n";
-                cout << " / \\  |\n";
-                cout << "=========\n";
-
-                break;
-        }
-    }
-
-
-    // --------------------------------------------------------
-    // DISPLAY GAME INFORMATION
-    // --------------------------------------------------------
-
-    void displayGameInfo() const {
-
-        cout << "\n";
-        cout << "Word: ";
-
-        for (char letter : guessedWord) {
-            cout << letter << " ";
-        }
-
-        cout << "\n";
+        cout << "  |\n";
+        cout << "__|__\n";
 
         cout << "Attempts remaining: "
              << maxAttempts - attempts
-             << "\n";
+             << endl;
+    }
 
-        cout << "Score: "
-             << player.getScore()
-             << "\n";
 
-        cout << "Guessed letters: ";
+    // --------------------------------------------------------
+    // DISPLAY WORD
+    // --------------------------------------------------------
 
-        if (guessedLetters.empty()) {
-            cout << "None";
-        }
-        else {
-            for (char letter : guessedLetters) {
-                cout << letter << " ";
-            }
-        }
+    void displayWord() const {
+
+        cout << "\nWord: ";
+
+        for (char c : guessedWord)
+            cout << c << " ";
 
         cout << "\n";
     }
 
 
     // --------------------------------------------------------
-    // CHECK IF LETTER WAS ALREADY GUESSED
+    // CHECK DUPLICATE LETTER
     // --------------------------------------------------------
 
     bool alreadyGuessed(char letter) const {
@@ -612,26 +508,33 @@ public:
 
 
     // --------------------------------------------------------
-    // PROCESS LETTER GUESS
+    // GUESS LETTER
     // --------------------------------------------------------
 
-    bool processGuess(char letter) {
+    void guessLetter(char letter) {
 
-        // Check repeated guess
+        letter = static_cast<char>(
+            tolower(
+                static_cast<unsigned char>(letter)
+            )
+        );
+
         if (alreadyGuessed(letter)) {
 
             cout << "You already guessed '"
                  << letter
                  << "'. Try another letter.\n";
 
-            return false;
+            return;
         }
 
         guessedLetters.push_back(letter);
 
         bool correct = false;
 
-        for (size_t i = 0; i < secretWord.length(); i++) {
+        for (size_t i = 0;
+             i < secretWord.length();
+             i++) {
 
             if (secretWord[i] == letter) {
 
@@ -641,220 +544,194 @@ public:
         }
 
         if (correct) {
-
             cout << "Correct guess!\n";
-
-            return true;
         }
-
-        attempts++;
-
-        cout << "Incorrect guess!\n";
-
-        return false;
+        else {
+            cout << "Wrong guess!\n";
+            attempts++;
+        }
     }
 
 
     // --------------------------------------------------------
-    // CHECK WIN
+    // WIN / LOSS
     // --------------------------------------------------------
 
-    bool hasWon() const {
-
+    bool won() const {
         return guessedWord == secretWord;
     }
 
-
-    // --------------------------------------------------------
-    // CHECK LOSS
-    // --------------------------------------------------------
-
-    bool hasLost() const {
-
+    bool lost() const {
         return attempts >= maxAttempts;
     }
 
 
     // --------------------------------------------------------
-    // CALCULATE SCORE
+    // SCORE CALCULATION
     // --------------------------------------------------------
 
-    int calculateRoundScore() const {
+    int calculateScore(int remainingTime) const {
 
         int baseScore;
 
-        switch (difficulty) {
+        if (difficulty == 1)
+            baseScore = 100;
+        else if (difficulty == 2)
+            baseScore = 200;
+        else
+            baseScore = 300;
 
-            case 1:
-                baseScore = 100;
-                break;
+        int attemptBonus =
+            (maxAttempts - attempts) * 25;
 
-            case 2:
-                baseScore = 200;
-                break;
+        int timeBonus =
+            remainingTime / 5;
 
-            case 3:
-                baseScore = 300;
-                break;
-
-            default:
-                baseScore = 100;
-        }
-
-        int remainingAttempts =
-            maxAttempts - attempts;
-
-        int bonus =
-            remainingAttempts * 20;
-
-        return baseScore + bonus;
+        return baseScore +
+               attemptBonus +
+               timeBonus;
     }
 
 
     // --------------------------------------------------------
-    // PLAY ONE ROUND
+    // PLAY ROUND
     // --------------------------------------------------------
 
-    bool playRound() {
+    void playRound() {
 
-        int category = selectCategory();
+        setupRound();
 
-        selectDifficulty();
-
-        initializeGame(category);
-
-        cout << "\n";
-        cout << "Category: "
-             << wordManager.getCategoryName(category)
-             << "\n";
-
-        cout << "Difficulty: ";
-
-        if (difficulty == 1)
-            cout << "Easy\n";
-        else if (difficulty == 2)
-            cout << "Medium\n";
-        else
-            cout << "Hard\n";
-
-        cout << "Time Limit: "
-             << timeLimit
-             << " seconds\n";
-
-        auto startTime =
+        auto start =
             chrono::steady_clock::now();
 
-        while (!hasWon() && !hasLost()) {
+        while (!won() && !lost()) {
 
-            auto currentTime =
+            auto now =
                 chrono::steady_clock::now();
 
-            auto elapsed =
-                chrono::duration_cast<
-                    chrono::seconds
-                >(currentTime - startTime).count();
+            int elapsed =
+                static_cast<int>(
+                    chrono::duration_cast<
+                        chrono::seconds
+                    >(now - start).count()
+                );
 
-            if (elapsed >= timeLimit) {
+            int remainingTime =
+                timeLimit - elapsed;
 
-                cout << "\n";
-                cout << "TIME'S UP!\n";
-                cout << "The word was: "
-                     << secretWord
-                     << "\n";
+            if (remainingTime <= 0) {
 
-                return false;
+                cout << "\nTime is up!\n";
+                break;
             }
 
             displayHangman();
-            displayGameInfo();
+
+            cout << "\nCategory: "
+                 << wordManager.categoryName(category)
+                 << endl;
+
+            cout << "Difficulty: "
+                 << wordManager.difficultyName(difficulty)
+                 << endl;
+
+            displayWord();
+
+            cout << "Time remaining: "
+                 << remainingTime
+                 << " seconds\n";
+
+            cout << "Guessed letters: ";
+
+            for (char c : guessedLetters)
+                cout << c << " ";
+
+            cout << "\n";
+
+            cout << "Enter a letter: ";
 
             char letter;
-
-            cout << "\nEnter a letter: ";
             cin >> letter;
 
-            letter =
-                static_cast<char>(
-                    tolower(
-                        static_cast<unsigned char>(letter)
-                    )
-                );
-
             if (!isalpha(
-                    static_cast<unsigned char>(letter)
-                )) {
+                    static_cast<unsigned char>(letter))) {
 
-                cout << "Please enter a valid alphabet letter.\n";
+                cout << "Please enter a letter only.\n";
                 continue;
             }
 
-            processGuess(letter);
+            guessLetter(letter);
         }
 
 
         // ----------------------------------------------------
-        // WIN
+        // RESULT
         // ----------------------------------------------------
 
-        if (hasWon()) {
+        auto end =
+            chrono::steady_clock::now();
 
-            int roundScore =
-                calculateRoundScore();
+        int elapsed =
+            static_cast<int>(
+                chrono::duration_cast<
+                    chrono::seconds
+                >(end - start).count()
+            );
 
-            player.addScore(roundScore);
+        int remainingTime =
+            max(0, timeLimit - elapsed);
 
-            displayHangman();
 
-            cout << "\n";
-            cout << "============================================\n";
-            cout << "              YOU WON!\n";
-            cout << "============================================\n";
+        cout << "\n====================================\n";
+
+        if (won()) {
+
+            int score =
+                calculateScore(remainingTime);
+
+            player.addScore(score);
+
+            cout << "             YOU WON!\n";
+            cout << "====================================\n";
 
             cout << "The word was: "
-                 << secretWord
-                 << "\n";
+                 << secretWord << endl;
 
-            cout << "Round Score: "
-                 << roundScore
-                 << "\n";
+            cout << "Round score: "
+                 << score << endl;
 
-            cout << "Total Score: "
-                 << player.getScore()
-                 << "\n";
+        }
+        else {
 
-            cout << "============================================\n";
+            cout << "            GAME OVER!\n";
+            cout << "====================================\n";
 
-            return true;
+            cout << "The word was: "
+                 << secretWord << endl;
         }
 
+        cout << "Your score: "
+             << player.getScore()
+             << endl;
 
-        // ----------------------------------------------------
-        // LOSS
-        // ----------------------------------------------------
+        cout << "====================================\n";
+    }
 
-        if (hasLost()) {
 
-            displayHangman();
+    // --------------------------------------------------------
+    // PLAY AGAIN
+    // --------------------------------------------------------
 
-            cout << "\n";
-            cout << "============================================\n";
-            cout << "              GAME OVER!\n";
-            cout << "============================================\n";
+    bool playAgain() const {
 
-            cout << "The correct word was: "
-                 << secretWord
-                 << "\n";
+        char choice;
 
-            cout << "Your score: "
-                 << player.getScore()
-                 << "\n";
+        cout << "\nWould you like to play again? (y/n): ";
+        cin >> choice;
 
-            cout << "============================================\n";
-
-            return false;
-        }
-
-        return false;
+        return tolower(
+            static_cast<unsigned char>(choice)
+        ) == 'y';
     }
 
 
@@ -864,41 +741,23 @@ public:
 
     void startGame() {
 
-        player.resetScore();
+        do {
 
-        bool playAgain = true;
-
-        while (playAgain) {
-
+            chooseCategory();
+            chooseDifficulty();
             playRound();
 
-            char choice;
+        } while (playAgain());
 
-            cout << "\n";
-            cout << "Play another round? (y/n): ";
-            cin >> choice;
-
-            choice =
-                static_cast<char>(
-                    tolower(
-                        static_cast<unsigned char>(choice)
-                    )
-                );
-
-            if (choice != 'y') {
-                playAgain = false;
-            }
-        }
-
-        // Save final score
         scoreManager.saveScore(player);
 
-        cout << "\n";
-        cout << "Final Score for "
-             << player.getName()
-             << ": "
+        cout << "\nYour final score is: "
              << player.getScore()
-             << "\n";
+             << endl;
+
+        cout << "Thank you for playing, "
+             << player.getName()
+             << "!\n";
     }
 
 
@@ -910,44 +769,46 @@ public:
 
         int choice;
 
-        do {
+        while (true) {
 
-            displayTitle();
-
-            cout << "Welcome, "
-                 << player.getName()
-                 << "!\n\n";
-
+            cout << "\n====================================\n";
+            cout << "          HANGMAN MAIN MENU\n";
+            cout << "====================================\n";
             cout << "1. Start Game\n";
             cout << "2. View High Scores\n";
-            cout << "0. Exit\n";
+            cout << "3. Exit Game\n";
+            cout << "====================================\n";
+            cout << "Enter your choice: ";
 
-            cout << "\nEnter your choice: ";
             cin >> choice;
 
-            switch (choice) {
+            if (cin.fail()) {
 
-                case 1:
-                    startGame();
-                    break;
+                cin.clear();
+                cin.ignore(1000, '\n');
 
-                case 2:
-                    scoreManager.displayHighScores();
-                    break;
-
-                case 0:
-
-                    cout << "\n";
-                    cout << "Thank you for playing Hangman!\n";
-
-                    break;
-
-                default:
-
-                    cout << "Invalid choice. Please try again.\n";
+                cout << "Invalid input.\n";
+                continue;
             }
 
-        } while (choice != 0);
+            if (choice == 1) {
+                startGame();
+            }
+            else if (choice == 2) {
+                scoreManager.displayHighScores();
+            }
+            else if (choice == 3) {
+
+                cout << "\nThank you for playing!\n";
+                break;
+
+            }
+            else {
+
+                cout << "Invalid choice. "
+                     << "Please select 1, 2, or 3.\n";
+            }
+        }
     }
 };
 
@@ -960,21 +821,18 @@ int main() {
 
     string playerName;
 
-    cout << "============================================\n";
-    cout << "           WELCOME TO HANGMAN\n";
-    cout << "============================================\n";
+    cout << "====================================\n";
+    cout << "       WELCOME TO HANGMAN GAME\n";
+    cout << "====================================\n";
 
     cout << "Enter your name: ";
     getline(cin, playerName);
 
-    if (playerName.empty()) {
+    if (playerName.empty())
         playerName = "Player";
-    }
 
-    // Create Game object
     Game game(playerName);
 
-    // Start game menu
     game.menu();
 
     return 0;
